@@ -1,9 +1,13 @@
+import streamlit as st
 from transformers import pipeline
 
-# Load the sentiment analysis pipeline
-sentiment_analyzer = pipeline("sentiment-analysis")
+# Load the sentiment analysis pipeline once and cache it
+@st.cache_resource
+def load_sentiment_analyzer():
+    return pipeline("sentiment-analysis")
 
-def get_bot_response(message):
+# Create a function to get the response from the bot based on sentiment
+def get_bot_response(message, sentiment_analyzer):
     sentiment = sentiment_analyzer(message)[0]
     label = sentiment['label']
 
@@ -14,15 +18,22 @@ def get_bot_response(message):
     else:
         return "Thanks for letting us know. Let me look into that for you."
 
+# Streamlit app setup
 def run_chat():
-    print("Welcome to FinBot 💬 (type 'exit' to quit)\n")
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() == "exit":
-            print("FinBot: Goodbye!")
-            break
-        response = get_bot_response(user_input)
-        print(f"FinBot: {response}\n")
+    # Title for the app
+    st.title("FinBot 💬")
+    
+    # Create a text input box for user input
+    user_input = st.text_input("You: ")
+
+    # Load sentiment analyzer (cached)
+    sentiment_analyzer = load_sentiment_analyzer()
+
+    if user_input:
+        with st.spinner("Analyzing your message..."):
+            # Get bot response
+            response = get_bot_response(user_input, sentiment_analyzer)
+            st.write(f"FinBot: {response}")
 
 if __name__ == "__main__":
     run_chat()
