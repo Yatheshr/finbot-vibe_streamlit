@@ -1,16 +1,20 @@
 import streamlit as st
 from transformers import pipeline
 
-# Load the sentiment analysis pipeline once and cache it
-@st.cache_resource
-def load_sentiment_analyzer():
-    return pipeline("sentiment-analysis")
+# Load sentiment model
+sentiment_analyzer = pipeline("sentiment-analysis")
 
-# Create a function to get the response from the bot based on sentiment
-def get_bot_response(message, sentiment_analyzer):
-    sentiment = sentiment_analyzer(message)[0]
-    label = sentiment['label']
+# Title for the web app
+st.title("📊 FinBot - Financial Support Chat")
 
+# Text input field for user message
+user_message = st.text_input("Type your message here:")
+
+# Define function to generate bot's response
+def get_response(msg):
+    result = sentiment_analyzer(msg)[0]
+    label = result["label"]
+    
     if label == "NEGATIVE":
         return "I'm really sorry for the trouble. I’ll prioritize your issue and get it fixed right away."
     elif label == "POSITIVE":
@@ -18,22 +22,7 @@ def get_bot_response(message, sentiment_analyzer):
     else:
         return "Thanks for letting us know. Let me look into that for you."
 
-# Streamlit app setup
-def run_chat():
-    # Title for the app
-    st.title("FinBot 💬")
-    
-    # Create a text input box for user input
-    user_input = st.text_input("You: ")
-
-    # Load sentiment analyzer (cached)
-    sentiment_analyzer = load_sentiment_analyzer()
-
-    if user_input:
-        with st.spinner("Analyzing your message..."):
-            # Get bot response
-            response = get_bot_response(user_input, sentiment_analyzer)
-            st.write(f"FinBot: {response}")
-
-if __name__ == "__main__":
-    run_chat()
+# Display response if there is a user message
+if user_message:
+    bot_reply = get_response(user_message)
+    st.markdown(f"**FinBot:** {bot_reply}")
